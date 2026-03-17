@@ -8,1006 +8,607 @@
   <title>Driver Coach</title>
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #0a0a0a;
-      --surface: #111111;
-      --border: #1e1e1e;
-      --text: #f0ede8;
-      --muted: #444;
-      --dim: #2a2a2a;
-      --green: #00e87a;
-      --yellow: #f5c842;
-      --red: #ff4444;
-      --accent: #00e87a;
+      --bg: #0a0a0a; --surface: #111; --border: #1e1e1e;
+      --text: #f0ede8; --muted: #555; --dim: #2a2a2a;
+      --green: #00e87a; --yellow: #f5c842; --red: #ff4444; --accent: #00e87a;
     }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; overflow: hidden; }
 
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-      overflow: hidden;
-    }
+    .screen { display: none; height: 100%; flex-direction: column; max-width: 480px; margin: 0 auto; }
+    .screen.active { display: flex; }
 
-    #app {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 0;
-    }
+    nav { display: flex; border-top: 1px solid var(--border); flex-shrink: 0; background: var(--bg); }
+    nav button { flex: 1; padding: 14px 0; background: transparent; border: none; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: color 0.2s; }
+    nav button.active { color: var(--accent); }
+    nav button:hover { color: var(--text); }
 
-    /* ── HEADER ── */
-    header {
-      padding: 48px 32px 24px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
+    .screen-header { padding: 44px 28px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .screen-label { font-size: 10px; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+    .screen-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
+    .screen-title span { color: var(--accent); }
 
-    .app-label {
-      font-size: 10px;
-      letter-spacing: 0.25em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
+    .scroll-body { flex: 1; overflow-y: auto; padding: 20px 28px; display: flex; flex-direction: column; gap: 14px; }
 
-    h1 {
-      font-family: 'Syne', sans-serif;
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      color: var(--text);
-    }
+    .status-bar { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); transition: background 0.3s; flex-shrink: 0; }
+    .dot.active { background: var(--green); animation: pulse 1.4s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    h1 span { color: var(--accent); }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+    .card-label { font-size: 9px; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
 
-    /* ── MAIN CONTENT ── */
-    main {
-      flex: 1;
-      overflow-y: auto;
-      padding: 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
+    .gforce-val { font-family: 'Syne', sans-serif; font-size: 60px; font-weight: 800; line-height: 1; transition: color 0.2s; text-align: center; }
+    .gforce-sub { font-size: 11px; color: var(--muted); text-align: center; margin-top: 4px; letter-spacing: 0.1em; }
+    .speed-badge { display: inline-block; font-size: 11px; color: var(--muted); letter-spacing: 0.1em; margin-left: auto; }
 
-    /* ── STATUS BAR ── */
-    .status-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-      text-transform: uppercase;
-    }
+    .axes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .axis-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 8px; text-align: center; }
+    .axis-lbl { font-size: 9px; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+    .axis-val { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
+    .bar-track { height: 3px; background: var(--dim); border-radius: 2px; margin-top: 8px; }
+    .bar-fill { height: 100%; border-radius: 2px; background: var(--accent); transition: width 0.1s, background 0.2s; }
 
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--muted);
-      transition: background 0.3s;
-    }
+    .scores { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .score-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 8px; text-align: center; }
+    .score-lbl { font-size: 9px; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+    .score-val { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; transition: color 0.3s; }
 
-    .status-dot.active { background: var(--green); animation: pulse 1.5s infinite; }
-    .status-dot.warning { background: var(--yellow); }
+    .event-item { display: flex; justify-content: space-between; font-size: 11px; padding: 5px 7px; border-radius: 4px; background: var(--dim); margin-bottom: 4px; animation: slideIn 0.2s ease; }
+    @keyframes slideIn { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:translateX(0)} }
+    .event-item.brake .et { color: var(--red); }
+    .event-item.corner .et { color: var(--yellow); }
+    .no-ev { font-size: 11px; color: var(--muted); text-align: center; padding: 8px 0; }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
+    .session-footer { padding: 14px 28px 20px; border-top: 1px solid var(--border); flex-shrink: 0; }
+    .session-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+    .main-btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; cursor: pointer; background: var(--accent); color: #000; transition: all 0.2s; }
+    .main-btn.recording { background: transparent; color: var(--red); border: 1px solid var(--red); }
 
-    /* ── G-FORCE DISPLAY ── */
-    .gforce-display {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 28px;
-      text-align: center;
-    }
-
-    .gforce-label {
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-
-    .gforce-value {
-      font-family: 'Syne', sans-serif;
-      font-size: 72px;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      line-height: 1;
-      color: var(--text);
-      transition: color 0.2s;
-    }
-
-    .gforce-unit {
-      font-size: 14px;
-      color: var(--muted);
-      margin-top: 6px;
-      letter-spacing: 0.1em;
-    }
-
-    /* ── AXIS BARS ── */
-    .axes {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px;
-    }
-
-    .axis-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px 12px;
-      text-align: center;
-    }
-
-    .axis-label {
-      font-size: 9px;
-      letter-spacing: 0.2em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .axis-value {
-      font-family: 'Syne', sans-serif;
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-
-    .axis-bar-track {
-      height: 3px;
-      background: var(--dim);
-      border-radius: 2px;
-      margin-top: 10px;
-      overflow: hidden;
-    }
-
-    .axis-bar-fill {
-      height: 100%;
-      border-radius: 2px;
-      background: var(--accent);
-      transition: width 0.1s, background 0.2s;
-      transform-origin: center;
-    }
-
-    /* ── SCORE CARDS ── */
-    .scores {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px;
-    }
-
-    .score-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px 12px;
-      text-align: center;
-    }
-
-    .score-label {
-      font-size: 9px;
-      letter-spacing: 0.15em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .score-value {
-      font-family: 'Syne', sans-serif;
-      font-size: 26px;
-      font-weight: 800;
-      transition: color 0.3s;
-    }
-
-    .score-ring {
-      width: 36px;
-      height: 36px;
-      margin: 8px auto 0;
-    }
-
-    /* ── EVENTS ── */
-    .events-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-    }
-
-    .events-header {
-      font-size: 9px;
-      letter-spacing: 0.2em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-
-    .event-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      max-height: 120px;
-      overflow-y: auto;
-    }
-
-    .event-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      padding: 6px 8px;
-      border-radius: 4px;
-      background: var(--dim);
-      animation: slideIn 0.2s ease;
-    }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-8px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    .event-type { color: var(--text); }
-    .event-val { color: var(--muted); font-size: 10px; }
-    .event-item.brake .event-type { color: var(--red); }
-    .event-item.corner .event-type { color: var(--yellow); }
-    .event-item.smooth .event-type { color: var(--green); }
-
-    .no-events {
-      font-size: 11px;
-      color: var(--muted);
-      text-align: center;
-      padding: 12px 0;
-    }
-
-    /* ── FOOTER / CONTROLS ── */
-    footer {
-      padding: 24px 32px 40px;
-      border-top: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .session-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 16px;
-      letter-spacing: 0.08em;
-    }
-
-    #main-btn {
-      width: 100%;
-      padding: 18px;
-      border: none;
-      border-radius: 8px;
-      font-family: 'Syne', sans-serif;
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: var(--accent);
-      color: #000;
-    }
-
-    #main-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-    #main-btn:active { transform: translateY(0); opacity: 1; }
-    #main-btn.recording { background: var(--dim); color: var(--red); border: 1px solid var(--red); }
-
-    /* ── RESULTS OVERLAY ── */
-    #results-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      z-index: 100;
-      flex-direction: column;
-      max-width: 480px;
-      margin: 0 auto;
-    }
-
+    /* Results */
+    #results-overlay { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 100; flex-direction: column; max-width: 480px; margin: 0 auto; }
     #results-overlay.show { display: flex; }
+    .results-body { flex: 1; overflow-y: auto; padding: 20px 28px; display: flex; flex-direction: column; gap: 14px; }
+    .overall-score-val { font-family: 'Syne', sans-serif; font-size: 80px; font-weight: 800; line-height: 1; text-align: center; }
+    .overall-grade { font-size: 12px; color: var(--muted); text-align: center; margin-top: 6px; letter-spacing: 0.1em; }
+    .res-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .res-mini { background: var(--dim); border-radius: 6px; padding: 12px 8px; text-align: center; }
+    .res-mini-lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+    .res-mini-val { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; }
+    .stat-row { display: flex; justify-content: space-between; font-size: 12px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-lbl { color: var(--muted); }
+    .results-footer { padding: 14px 28px 28px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-sec  { flex: 1; padding: 13px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--text); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-pri  { flex: 2; padding: 13px; border: none; border-radius: 8px; background: var(--accent); color: #000; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 800; cursor: pointer; }
+    .btn-ghost { flex: 1; padding: 13px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--muted); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; }
 
-    .results-header {
-      padding: 48px 32px 24px;
-      border-bottom: 1px solid var(--border);
-    }
+    /* History */
+    .history-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 0; transition: border-color 0.2s; }
+    .history-item:hover { border-color: var(--muted); }
+    .history-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .history-date { font-size: 11px; color: var(--muted); }
+    .history-score { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; }
+    .history-meta { display: flex; gap: 10px; font-size: 10px; color: var(--muted); flex-wrap: wrap; }
+    .history-pills { display: flex; gap: 6px; margin-top: 10px; }
+    .pill { background: var(--dim); border-radius: 3px; padding: 3px 8px; font-size: 10px; }
+    .empty-history { text-align: center; padding: 48px 0; color: var(--muted); font-size: 12px; line-height: 1.8; }
 
-    .results-label {
-      font-size: 10px;
-      letter-spacing: 0.25em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
+    /* Calibration */
+    .cal-row { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+    .cal-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+    .cal-lbl { font-size: 11px; color: var(--text); }
+    .cal-val { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: var(--accent); }
+    .cal-desc { font-size: 10px; color: var(--muted); margin-bottom: 10px; line-height: 1.6; }
+    input[type=range] { width: 100%; accent-color: var(--accent); }
+    .orient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .orient-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 8px; text-align: center; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.08em; transition: all 0.2s; }
+    .orient-btn.selected { border-color: var(--accent); color: var(--accent); }
+    .reset-btn { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; cursor: pointer; letter-spacing: 0.1em; }
 
-    .results-title {
-      font-family: 'Syne', sans-serif;
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-    }
-
-    .results-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .overall-score {
-      text-align: center;
-      padding: 32px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-    }
-
-    .overall-label {
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-
-    .overall-value {
-      font-family: 'Syne', sans-serif;
-      font-size: 96px;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      line-height: 1;
-    }
-
-    .overall-grade {
-      font-size: 14px;
-      color: var(--muted);
-      margin-top: 8px;
-      letter-spacing: 0.1em;
-    }
-
-    .result-breakdown {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px;
-    }
-
-    .result-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px 12px;
-      text-align: center;
-    }
-
-    .result-card-label {
-      font-size: 9px;
-      letter-spacing: 0.15em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
-
-    .result-card-value {
-      font-family: 'Syne', sans-serif;
-      font-size: 32px;
-      font-weight: 800;
-    }
-
-    .result-card-sub {
-      font-size: 10px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
-    .results-stats {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-    }
-
-    .stat-label { color: var(--muted); }
-    .stat-val { color: var(--text); }
-
-    .results-footer {
-      padding: 24px 32px 40px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      gap: 12px;
-    }
-
-    .btn-secondary {
-      flex: 1;
-      padding: 16px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: transparent;
-      color: var(--text);
-      font-family: 'Syne', sans-serif;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-primary {
-      flex: 2;
-      padding: 16px;
-      border: none;
-      border-radius: 8px;
-      background: var(--accent);
-      color: #000;
-      font-family: 'Syne', sans-serif;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-secondary:hover, .btn-primary:hover { opacity: 0.85; }
-
-    /* ── PERMISSION SCREEN ── */
-    #permission-screen {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      z-index: 200;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 32px;
-      text-align: center;
-      max-width: 480px;
-      margin: 0 auto;
-    }
-
+    /* Permission */
+    #permission-screen { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 200; flex-direction: column; align-items: center; justify-content: center; padding: 48px 32px; text-align: center; max-width: 480px; margin: 0 auto; }
     #permission-screen.show { display: flex; }
-
-    .permission-icon {
-      font-size: 48px;
-      margin-bottom: 24px;
-    }
-
-    .permission-title {
-      font-family: 'Syne', sans-serif;
-      font-size: 22px;
-      font-weight: 800;
-      margin-bottom: 12px;
-    }
-
-    .permission-text {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.7;
-      margin-bottom: 32px;
-    }
-
-    .permission-btn {
-      width: 100%;
-      padding: 18px;
-      border: none;
-      border-radius: 8px;
-      background: var(--accent);
-      color: #000;
-      font-family: 'Syne', sans-serif;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .permission-note {
-      font-size: 10px;
-      color: var(--dim);
-      margin-top: 16px;
-      letter-spacing: 0.05em;
-    }
+    .perm-btn { width: 100%; padding: 16px; border: none; border-radius: 8px; background: var(--accent); color: #000; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<!-- Permission Screen (iOS) -->
 <div id="permission-screen">
-  <div class="permission-icon">📱</div>
-  <div class="permission-title">Motion Access Needed</div>
-  <div class="permission-text">Driver Coach needs access to your device's motion sensors to measure acceleration, braking, and cornering forces.</div>
-  <button class="permission-btn" onclick="requestPermission()">Allow Motion Access</button>
-  <div class="permission-note">Your data never leaves this device.</div>
+  <div style="font-size:48px;margin-bottom:24px">📱</div>
+  <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:12px">Motion Access Needed</div>
+  <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:32px">Driver Coach needs access to your device motion sensors to measure acceleration, braking, and cornering.</div>
+  <button class="perm-btn" onclick="requestPermission()">Allow Motion Access</button>
+  <div style="font-size:10px;color:var(--dim);margin-top:14px">Your data never leaves this device.</div>
 </div>
 
-<!-- Results Overlay -->
 <div id="results-overlay">
-  <div class="results-header">
-    <div class="results-label">Session Complete</div>
-    <div class="results-title" id="results-title">Your Drive</div>
+  <div class="screen-header">
+    <div class="screen-label">Session Complete</div>
+    <div class="screen-title" id="res-title">Your Drive</div>
   </div>
   <div class="results-body">
-    <div class="overall-score">
-      <div class="overall-label">Overall Score</div>
-      <div class="overall-value" id="res-overall">—</div>
+    <div class="card" style="text-align:center;padding:24px">
+      <div class="card-label">Overall Score</div>
+      <div class="overall-score-val" id="res-overall">—</div>
       <div class="overall-grade" id="res-grade"></div>
     </div>
-    <div class="result-breakdown">
-      <div class="result-card">
-        <div class="result-card-label">Smooth</div>
-        <div class="result-card-value" id="res-smooth">—</div>
-        <div class="result-card-sub">smoothness</div>
-      </div>
-      <div class="result-card">
-        <div class="result-card-label">Brake</div>
-        <div class="result-card-value" id="res-brake">—</div>
-        <div class="result-card-sub">braking</div>
-      </div>
-      <div class="result-card">
-        <div class="result-card-label">Corner</div>
-        <div class="result-card-value" id="res-corner">—</div>
-        <div class="result-card-sub">cornering</div>
-      </div>
+    <div class="res-grid">
+      <div class="res-mini"><div class="res-mini-lbl">Smooth</div><div class="res-mini-val" id="res-s">—</div></div>
+      <div class="res-mini"><div class="res-mini-lbl">Brake</div><div class="res-mini-val" id="res-b">—</div></div>
+      <div class="res-mini"><div class="res-mini-lbl">Corner</div><div class="res-mini-val" id="res-c">—</div></div>
     </div>
-    <div class="results-stats">
-      <div class="stat-row"><span class="stat-label">Duration</span><span class="stat-val" id="res-duration">—</span></div>
-      <div class="stat-row"><span class="stat-label">Hard brakes</span><span class="stat-val" id="res-brakes">—</span></div>
-      <div class="stat-row"><span class="stat-label">Hard corners</span><span class="stat-val" id="res-corners">—</span></div>
-      <div class="stat-row"><span class="stat-label">Peak g-force</span><span class="stat-val" id="res-peak">—</span></div>
-      <div class="stat-row"><span class="stat-label">Avg smoothness</span><span class="stat-val" id="res-avg">—</span></div>
+    <div class="card">
+      <div class="stat-row"><span class="stat-lbl">Duration</span><span id="res-dur">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Hard brakes</span><span id="res-brk">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Hard corners</span><span id="res-cor">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Peak g-force</span><span id="res-peak">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Avg g-force</span><span id="res-avg">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Top speed</span><span id="res-spd">—</span></div>
     </div>
   </div>
   <div class="results-footer">
-    <button class="btn-secondary" onclick="closeResults()">Close</button>
-    <button class="btn-primary" onclick="newSession()">New Session</button>
+    <button class="btn-ghost" onclick="exportCSV()">CSV</button>
+    <button class="btn-sec" onclick="closeResults()">Close</button>
+    <button class="btn-pri" onclick="newSession()">New Drive</button>
   </div>
 </div>
 
-<!-- Main App -->
-<div id="app">
-  <header>
-    <div class="app-label">Driver Coach</div>
-    <h1>Your Drive,<br><span>Scored.</span></h1>
-  </header>
-
-  <main>
-    <!-- Status -->
+<!-- DRIVE SCREEN -->
+<div class="screen active" id="screen-drive">
+  <div class="screen-header">
+    <div class="screen-label">Driver Coach</div>
+    <div class="screen-title">Your Drive, <span>Scored.</span></div>
+  </div>
+  <div class="scroll-body">
     <div class="status-bar">
-      <div class="status-dot" id="status-dot"></div>
+      <div class="dot" id="status-dot"></div>
       <span id="status-text">Ready to record</span>
-      <span id="grav-method" style="margin-left:auto;font-size:9px;color:var(--muted);letter-spacing:0.1em"></span>
+      <span id="grav-method" style="margin-left:auto;font-size:9px;color:var(--dim)"></span>
     </div>
-
-    <!-- Live G-Force -->
-    <div class="gforce-display">
-      <div class="gforce-label">Total G-Force</div>
-      <div class="gforce-value" id="gforce-val">0.00</div>
-      <div class="gforce-unit">g</div>
+    <div class="card">
+      <div style="display:flex;align-items:center;margin-bottom:10px">
+        <span class="card-label" style="margin-bottom:0">Total G-Force</span>
+        <span class="speed-badge" id="speed-display">— mph</span>
+      </div>
+      <div class="gforce-val" id="gforce-val">0.00</div>
+      <div class="gforce-sub">g</div>
     </div>
-
-    <!-- Axes -->
     <div class="axes">
-      <div class="axis-card">
-        <div class="axis-label">Long</div>
-        <div class="axis-value" id="ax-long">0.00</div>
-        <div class="axis-bar-track"><div class="axis-bar-fill" id="bar-long" style="width:0%"></div></div>
-      </div>
-      <div class="axis-card">
-        <div class="axis-label">Lat</div>
-        <div class="axis-value" id="ax-lat">0.00</div>
-        <div class="axis-bar-track"><div class="axis-bar-fill" id="bar-lat" style="width:0%"></div></div>
-      </div>
-      <div class="axis-card">
-        <div class="axis-label">Vert</div>
-        <div class="axis-value" id="ax-vert">0.00</div>
-        <div class="axis-bar-track"><div class="axis-bar-fill" id="bar-vert" style="width:0%"></div></div>
-      </div>
+      <div class="axis-card"><div class="axis-lbl" id="lbl-lon">Long</div><div class="axis-val" id="ax-lon">0.00</div><div class="bar-track"><div class="bar-fill" id="bl-lon" style="width:0%"></div></div></div>
+      <div class="axis-card"><div class="axis-lbl" id="lbl-lat">Lat</div><div class="axis-val" id="ax-lat">0.00</div><div class="bar-track"><div class="bar-fill" id="bl-lat" style="width:0%"></div></div></div>
+      <div class="axis-card"><div class="axis-lbl">Vert</div><div class="axis-val" id="ax-vrt">0.00</div><div class="bar-track"><div class="bar-fill" id="bl-vrt" style="width:0%"></div></div></div>
     </div>
-
-    <!-- Live Scores -->
     <div class="scores">
-      <div class="score-card">
-        <div class="score-label">Smooth</div>
-        <div class="score-value" id="score-smooth">—</div>
-      </div>
-      <div class="score-card">
-        <div class="score-label">Brake</div>
-        <div class="score-value" id="score-brake">—</div>
-      </div>
-      <div class="score-card">
-        <div class="score-label">Corner</div>
-        <div class="score-value" id="score-corner">—</div>
-      </div>
+      <div class="score-card"><div class="score-lbl">Smooth</div><div class="score-val" id="sc-s">—</div></div>
+      <div class="score-card"><div class="score-lbl">Brake</div><div class="score-val" id="sc-b">—</div></div>
+      <div class="score-card"><div class="score-lbl">Corner</div><div class="score-val" id="sc-c">—</div></div>
     </div>
+    <div class="card">
+      <div class="card-label">Events</div>
+      <div id="ev-list"><div class="no-ev">Events will appear during recording</div></div>
+    </div>
+  </div>
+  <div class="session-footer">
+    <div class="session-meta"><span id="s-time">00:00</span><span id="s-samples">0 samples</span></div>
+    <button class="main-btn" id="main-btn" onclick="toggleSession()">Start Session</button>
+  </div>
+  <nav>
+    <button class="active" onclick="showScreen('drive')">Drive</button>
+    <button onclick="showScreen('history')">History</button>
+    <button onclick="showScreen('calibrate')">Settings</button>
+  </nav>
+</div>
 
-    <!-- Events -->
-    <div class="events-panel">
-      <div class="events-header">Events</div>
-      <div class="event-list" id="event-list">
-        <div class="no-events">Events will appear during recording</div>
+<!-- HISTORY SCREEN -->
+<div class="screen" id="screen-history">
+  <div class="screen-header">
+    <div class="screen-label">Driver Coach</div>
+    <div class="screen-title">Past <span>Drives</span></div>
+  </div>
+  <div class="scroll-body" id="history-list"></div>
+  <nav>
+    <button onclick="showScreen('drive')">Drive</button>
+    <button class="active" onclick="showScreen('history')">History</button>
+    <button onclick="showScreen('calibrate')">Settings</button>
+  </nav>
+</div>
+
+<!-- CALIBRATE SCREEN -->
+<div class="screen" id="screen-calibrate">
+  <div class="screen-header">
+    <div class="screen-label">Driver Coach</div>
+    <div class="screen-title">Settings</div>
+  </div>
+  <div class="scroll-body">
+    <div class="card">
+      <div class="card-label">Phone Orientation</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:12px;line-height:1.6">How is your phone mounted? This maps the correct axis to braking and cornering.</div>
+      <div class="orient-grid">
+        <div class="orient-btn selected" id="orient-portrait" onclick="setOrientation('portrait')">📱<br>Portrait<br>upright</div>
+        <div class="orient-btn" id="orient-landscape" onclick="setOrientation('landscape')">📱<br>Landscape<br>rotated</div>
+        <div class="orient-btn" id="orient-portrait-flip" onclick="setOrientation('portrait-flip')">📱<br>Portrait<br>upside down</div>
+        <div class="orient-btn" id="orient-landscape-flip" onclick="setOrientation('landscape-flip')">📱<br>Landscape<br>flipped</div>
       </div>
     </div>
-  </main>
-
-  <footer>
-    <div class="session-info">
-      <span id="session-time">00:00</span>
-      <span id="session-samples">0 samples</span>
+    <div class="cal-row">
+      <div class="cal-header"><span class="cal-lbl">Deadband</span><span class="cal-val" id="cal-db-val">0.04g</span></div>
+      <div class="cal-desc">Movements below this are treated as zero. Raise if display is noisy at a standstill.</div>
+      <input type="range" min="0" max="0.12" step="0.01" value="0.04" id="cal-db" oninput="updateCal()">
     </div>
-    <button id="main-btn" onclick="toggleSession()">Start Session</button>
-  </footer>
+    <div class="cal-row">
+      <div class="cal-header"><span class="cal-lbl">Hard Brake Threshold</span><span class="cal-val" id="cal-brk-val">0.40g</span></div>
+      <div class="cal-desc">Longitudinal deceleration above this triggers a hard brake event.</div>
+      <input type="range" min="0.15" max="0.80" step="0.05" value="0.40" id="cal-brk" oninput="updateCal()">
+    </div>
+    <div class="cal-row">
+      <div class="cal-header"><span class="cal-lbl">Hard Corner Threshold</span><span class="cal-val" id="cal-cor-val">0.35g</span></div>
+      <div class="cal-desc">Lateral acceleration above this triggers a hard corner event.</div>
+      <input type="range" min="0.15" max="0.80" step="0.05" value="0.35" id="cal-cor" oninput="updateCal()">
+    </div>
+    <div class="cal-row">
+      <div class="cal-header"><span class="cal-lbl">Speed Weighting</span><span class="cal-val" id="cal-spd-val">On</span></div>
+      <div class="cal-desc">Hard events at higher speeds count more heavily against your score.</div>
+      <input type="range" min="0" max="1" step="1" value="1" id="cal-spd" oninput="updateCal()">
+    </div>
+    <button class="reset-btn" onclick="resetCal()">Reset to Defaults</button>
+  </div>
+  <nav>
+    <button onclick="showScreen('drive')">Drive</button>
+    <button onclick="showScreen('history')">History</button>
+    <button class="active" onclick="showScreen('calibrate')">Settings</button>
+  </nav>
 </div>
 
 <script>
-// ── STATE ──
-let recording = false;
-let sessionStart = null;
-let timerInterval = null;
-let sampleCount = 0;
+// ── CAL ──
+let cal = { deadband:0.04, brakeG:0.40, cornerG:0.35, speedWeight:true, orientation:'portrait' };
 
-// Thresholds (in g)
-const HARD_BRAKE_G = 0.4;
-const HARD_CORNER_G = 0.35;
-const JERK_THRESHOLD = 0.15;
+function loadCal() {
+  try { const s = localStorage.getItem('dc-cal'); if (s) cal = {...cal,...JSON.parse(s)}; } catch {}
+  applyCalToUI();
+}
+function saveCal() { try { localStorage.setItem('dc-cal', JSON.stringify(cal)); } catch {} }
+function applyCalToUI() {
+  document.getElementById('cal-db').value  = cal.deadband;
+  document.getElementById('cal-brk').value = cal.brakeG;
+  document.getElementById('cal-cor').value = cal.cornerG;
+  document.getElementById('cal-spd').value = cal.speedWeight ? 1 : 0;
+  updateCal(); setOrientation(cal.orientation, false);
+}
+function updateCal() {
+  cal.deadband    = parseFloat(document.getElementById('cal-db').value);
+  cal.brakeG      = parseFloat(document.getElementById('cal-brk').value);
+  cal.cornerG     = parseFloat(document.getElementById('cal-cor').value);
+  cal.speedWeight = document.getElementById('cal-spd').value === '1';
+  document.getElementById('cal-db-val').textContent  = cal.deadband.toFixed(2)+'g';
+  document.getElementById('cal-brk-val').textContent = cal.brakeG.toFixed(2)+'g';
+  document.getElementById('cal-cor-val').textContent = cal.cornerG.toFixed(2)+'g';
+  document.getElementById('cal-spd-val').textContent = cal.speedWeight ? 'On' : 'Off';
+  saveCal();
+}
+function setOrientation(o, save=true) {
+  cal.orientation = o;
+  ['portrait','landscape','portrait-flip','landscape-flip'].forEach(k =>
+    document.getElementById('orient-'+k).classList.toggle('selected', k===o));
+  const lonLabels = { portrait:'Long', landscape:'Lat', 'portrait-flip':'Long', 'landscape-flip':'Lat' };
+  const latLabels = { portrait:'Lat',  landscape:'Long','portrait-flip':'Lat',  'landscape-flip':'Long' };
+  document.getElementById('lbl-lon').textContent = lonLabels[o];
+  document.getElementById('lbl-lat').textContent = latLabels[o];
+  if (save) saveCal();
+}
+function resetCal() {
+  cal = { deadband:0.04, brakeG:0.40, cornerG:0.35, speedWeight:true, orientation:'portrait' };
+  applyCalToUI(); saveCal();
+}
+function mapAxes(x, y) {
+  switch (cal.orientation) {
+    case 'landscape':      return { lonRaw: y, latRaw:-x };
+    case 'portrait-flip':  return { lonRaw:-y, latRaw:-x };
+    case 'landscape-flip': return { lonRaw:-y, latRaw: x };
+    default:               return { lonRaw: y, latRaw: x };
+  }
+}
 
-// Session data
-let samples = [];
-let events = [];
-let hardBrakes = 0;
-let hardCorners = 0;
-let peakG = 0;
-let jerks = 0;
-let lastG = 0;
+// ── GRAVITY COMP ──
+let gravX=0, gravY=0, gravZ=0, gravInit=false;
+const GRAV_A = 0.85;
+function updateGravity(x,y,z) {
+  if (!gravInit) { gravX=x; gravY=y; gravZ=z; gravInit=true; return; }
+  gravX = GRAV_A*gravX + (1-GRAV_A)*x;
+  gravY = GRAV_A*gravY + (1-GRAV_A)*y;
+  gravZ = GRAV_A*gravZ + (1-GRAV_A)*z;
+}
 
-// ── PERMISSION (iOS 13+) ──
+// ── DISPLAY SMOOTH ──
+let dLat=0, dLon=0, dVrt=0, dTot=0;
+const DISP_A = 0.65;
+function db(v) { return Math.abs(v) < cal.deadband ? 0 : v; }
+
+// ── GPS ──
+let currentSpeedMph=0, topSpeedMph=0;
+function startGPS() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.watchPosition(pos => {
+    if (pos.coords.speed !== null) {
+      currentSpeedMph = pos.coords.speed * 2.237;
+      if (recording && currentSpeedMph > topSpeedMph) topSpeedMph = currentSpeedMph;
+    }
+    document.getElementById('speed-display').textContent =
+      currentSpeedMph > 1 ? currentSpeedMph.toFixed(0)+' mph' : '— mph';
+  }, () => { document.getElementById('speed-display').textContent = 'no GPS'; },
+  { enableHighAccuracy:true, maximumAge:1000 });
+}
+
+// ── SESSION ──
+let recording=false, sessionStart=null, timerInterval=null;
+let sampleCount=0, samples=[], eventLog=[];
+let hardBrakes=0, hardCorners=0, peakG=0, jerks=0, lastG=0, lastEvTime={};
+
+// ── PERMISSION ──
 function needsPermission() {
   return typeof DeviceMotionEvent !== 'undefined' &&
     typeof DeviceMotionEvent.requestPermission === 'function';
 }
-
 window.addEventListener('load', () => {
+  loadCal(); startGPS(); renderHistory();
   if (needsPermission()) {
     document.getElementById('permission-screen').classList.add('show');
+  } else {
+    window.addEventListener('devicemotion', handleMotion);
   }
 });
-
 function requestPermission() {
-  DeviceMotionEvent.requestPermission().then(state => {
-    if (state === 'granted') {
+  DeviceMotionEvent.requestPermission().then(s => {
+    if (s === 'granted') {
       document.getElementById('permission-screen').classList.remove('show');
-      startMotion();
+      window.addEventListener('devicemotion', handleMotion);
     }
   }).catch(console.error);
 }
 
-// ── GRAVITY COMPENSATION ──
-// We use a low-pass filter to estimate the gravity component on each axis,
-// then subtract it so only dynamic acceleration (actual movement) remains.
-let gravX = 0, gravY = 0, gravZ = 0;
-let gravInitialized = false;
-const ALPHA = 0.85; // gravity filter — higher = slower adaptation
-
-// Display smoothing — separate lighter filter just for the readouts
-let dispLat = 0, dispLon = 0, dispVrt = 0, dispTot = 0;
-const DISP_ALPHA = 0.65; // lower = smoother but slightly more lag
-const DEADBAND = 0.04;   // g — movements below this are treated as zero
-
-function deadband(v) { return v < DEADBAND ? 0 : v; }
-
-function updateGravity(x, y, z) {
-  if (!gravInitialized) {
-    gravX = x; gravY = y; gravZ = z;
-    gravInitialized = true;
-    return;
-  }
-  gravX = ALPHA * gravX + (1 - ALPHA) * x;
-  gravY = ALPHA * gravY + (1 - ALPHA) * y;
-  gravZ = ALPHA * gravZ + (1 - ALPHA) * z;
-}
-
 // ── MOTION ──
-function startMotion() {
-  window.addEventListener('devicemotion', handleMotion);
-}
-
-if (!needsPermission()) {
-  window.addEventListener('load', () => startMotion());
-}
-
 function handleMotion(e) {
-  // Prefer e.acceleration (gravity already removed by OS) if available and non-null
-  const hasCleanAcc = e.acceleration &&
-    (e.acceleration.x !== null || e.acceleration.y !== null || e.acceleration.z !== null);
-
-  let latRaw, lonRaw, vertRaw;
-
-  if (hasCleanAcc) {
+  const clean = e.acceleration && e.acceleration.x !== null;
+  let rawX, rawY, rawZ;
+  if (clean) {
     document.getElementById('grav-method').textContent = 'OS GRAV';
-    // OS-provided gravity removal — most reliable
-    latRaw  = (e.acceleration.x || 0) / 9.81;
-    lonRaw  = (e.acceleration.y || 0) / 9.81;
-    vertRaw = (e.acceleration.z || 0) / 9.81;
+    rawX = (e.acceleration.x||0)/9.81;
+    rawY = (e.acceleration.y||0)/9.81;
+    rawZ = (e.acceleration.z||0)/9.81;
   } else {
     document.getElementById('grav-method').textContent = 'LP FILTER';
-    // Fall back: manual gravity removal via low-pass filter
-    const acc = e.accelerationIncludingGravity;
-    if (!acc) return;
-    updateGravity(acc.x || 0, acc.y || 0, acc.z || 0);
-    latRaw  = ((acc.x || 0) - gravX) / 9.81;
-    lonRaw  = ((acc.y || 0) - gravY) / 9.81;
-    vertRaw = ((acc.z || 0) - gravZ) / 9.81;
+    const a = e.accelerationIncludingGravity; if (!a) return;
+    updateGravity(a.x||0, a.y||0, a.z||0);
+    rawX = ((a.x||0)-gravX)/9.81;
+    rawY = ((a.y||0)-gravY)/9.81;
+    rawZ = ((a.z||0)-gravZ)/9.81;
   }
 
-  // Convert m/s² to g — absolute values for display
-  const lat  = Math.abs(latRaw);
-  const lon  = Math.abs(lonRaw);
-  const vert = Math.abs(vertRaw);
+  const { lonRaw, latRaw } = mapAxes(rawX, rawY);
+  const lat=Math.abs(latRaw), lon=Math.abs(lonRaw), vert=Math.abs(rawZ);
   const total = Math.sqrt(lat*lat + lon*lon + vert*vert);
 
-  // Smooth display values to reduce jitter
-  dispLat = DISP_ALPHA * dispLat + (1 - DISP_ALPHA) * lat;
-  dispLon = DISP_ALPHA * dispLon + (1 - DISP_ALPHA) * lon;
-  dispVrt = DISP_ALPHA * dispVrt + (1 - DISP_ALPHA) * vert;
-  dispTot = DISP_ALPHA * dispTot + (1 - DISP_ALPHA) * total;
-
-  updateDisplay(deadband(dispLat), deadband(dispLon), deadband(dispVrt), deadband(dispTot));
-
-  // For brake detection, preserve sign — negative Y = deceleration
-  const signedLon = lonRaw;
+  dLon = DISP_A*dLon + (1-DISP_A)*lon;
+  dLat = DISP_A*dLat + (1-DISP_A)*lat;
+  dVrt = DISP_A*dVrt + (1-DISP_A)*vert;
+  dTot = DISP_A*dTot + (1-DISP_A)*total;
+  updateDisplay(db(dLon), db(dLat), db(dVrt), db(dTot));
 
   if (!recording) return;
 
   sampleCount++;
-  samples.push(total);
-
-  // Peak
+  samples.push({ t:Date.now(), lon, lat, vrt:vert, total, spd:currentSpeedMph });
   if (total > peakG) peakG = total;
-
-  // Jerk detection
-  const jerk = Math.abs(total - lastG);
-  if (jerk > JERK_THRESHOLD) jerks++;
+  if (Math.abs(total-lastG) > 0.15) jerks++;
   lastG = total;
 
-  // Hard brake: large longitudinal decel (negative = braking)
-  if (signedLon < -HARD_BRAKE_G) {
-    hardBrakes++;
-    addEvent('brake', `Hard brake ${signedLon.toFixed(2)}g`);
+  const now = Date.now();
+  const speedFactor = cal.speedWeight ? Math.max(0.5, Math.min(1.5, 0.5 + currentSpeedMph/60)) : 1.0;
+  const spdTag = currentSpeedMph > 2 ? ` @ ${currentSpeedMph.toFixed(0)} mph` : '';
+
+  if (lonRaw < -cal.brakeG && now-(lastEvTime.brake||0) > 2000) {
+    hardBrakes += speedFactor; lastEvTime.brake = now;
+    addEvent('brake', `Hard brake ${lonRaw.toFixed(2)}g${spdTag}`);
+    eventLog.push({ type:'brake', g:lonRaw, spd:currentSpeedMph, t:now });
+  }
+  if (lat > cal.cornerG && now-(lastEvTime.corner||0) > 2000) {
+    hardCorners += speedFactor; lastEvTime.corner = now;
+    addEvent('corner', `Hard corner ${lat.toFixed(2)}g${spdTag}`);
+    eventLog.push({ type:'corner', g:lat, spd:currentSpeedMph, t:now });
   }
 
-  // Hard corner: large lateral
-  if (lat > HARD_CORNER_G) {
-    hardCorners++;
-    addEvent('corner', `Hard corner ${lat.toFixed(2)}g`);
-  }
-
-  // Update live scores every 20 samples
   if (sampleCount % 20 === 0) updateLiveScores();
-
-  document.getElementById('session-samples').textContent = sampleCount + ' samples';
+  document.getElementById('s-samples').textContent = sampleCount+' samples';
 }
 
-function updateDisplay(lat, lon, vert, total) {
+function updateDisplay(lon, lat, vrt, total) {
   const gv = document.getElementById('gforce-val');
   gv.textContent = total.toFixed(2);
-  gv.style.color = total > 0.6 ? 'var(--red)' : total > 0.35 ? 'var(--yellow)' : 'var(--text)';
-
-  document.getElementById('ax-lat').textContent  = lat.toFixed(2);
-  document.getElementById('ax-long').textContent = lon.toFixed(2);
-  document.getElementById('ax-vert').textContent = vert.toFixed(2);
-
-  const pct = (v) => Math.min(100, v / 0.8 * 100).toFixed(1) + '%';
-  const barColor = (v) => v > 0.5 ? 'var(--red)' : v > 0.3 ? 'var(--yellow)' : 'var(--accent)';
-
-  const bl = document.getElementById('bar-lat');
-  const bln = document.getElementById('bar-long');
-  const bv = document.getElementById('bar-vert');
-  bl.style.width  = pct(lat);   bl.style.background  = barColor(lat);
-  bln.style.width = pct(lon);   bln.style.background = barColor(lon);
-  bv.style.width  = pct(vert);  bv.style.background  = barColor(vert);
+  gv.style.color = total>0.6?'var(--red)':total>0.35?'var(--yellow)':'var(--text)';
+  document.getElementById('ax-lon').textContent = lon.toFixed(2);
+  document.getElementById('ax-lat').textContent = lat.toFixed(2);
+  document.getElementById('ax-vrt').textContent = vrt.toFixed(2);
+  const pct = v => Math.min(100, v/0.8*100).toFixed(1)+'%';
+  const bc  = v => v>0.5?'var(--red)':v>0.3?'var(--yellow)':'var(--accent)';
+  const el = id => document.getElementById(id);
+  el('bl-lon').style.cssText = `width:${pct(lon)};background:${bc(lon)}`;
+  el('bl-lat').style.cssText = `width:${pct(lat)};background:${bc(lat)}`;
+  el('bl-vrt').style.cssText = `width:${pct(vrt)};background:${bc(vrt)}`;
 }
 
 function addEvent(type, text) {
-  const list = document.getElementById('event-list');
-  const empties = list.querySelectorAll('.no-events');
-  empties.forEach(e => e.remove());
-
-  // Debounce — don't spam same event type
-  const last = events[events.length - 1];
-  if (last && last.type === type && Date.now() - last.time < 2000) return;
-
-  events.push({ type, text, time: Date.now() });
-
-  const item = document.createElement('div');
-  item.className = `event-item ${type}`;
-  item.innerHTML = `<span class="event-type">${text}</span><span class="event-val">${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span>`;
-  list.insertBefore(item, list.firstChild);
-
-  // Keep max 10 events visible
+  const list = document.getElementById('ev-list');
+  list.querySelectorAll('.no-ev').forEach(e => e.remove());
+  const d = document.createElement('div');
+  d.className = 'event-item '+type;
+  d.innerHTML = `<span class="et">${text}</span><span style="color:var(--muted);font-size:10px">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span>`;
+  list.insertBefore(d, list.firstChild);
   while (list.children.length > 10) list.removeChild(list.lastChild);
 }
 
+function scoreColor(v) { return v>=80?'var(--green)':v>=60?'var(--yellow)':'var(--red)'; }
+
+function calcScores() {
+  const jerkRate = jerks / Math.max(samples.length,1);
+  const ss = Math.max(0, Math.min(100, Math.round(100 - jerkRate*300)));
+  const mins = (Date.now()-sessionStart)/60000;
+  const bs = Math.max(0, Math.min(100, Math.round(100 - (hardBrakes/Math.max(mins,0.1))*20)));
+  const cs = Math.max(0, Math.min(100, Math.round(100 - (hardCorners/Math.max(mins,0.1))*20)));
+  return { ss, bs, cs };
+}
+
 function updateLiveScores() {
-  if (samples.length < 10) return;
-
-  const smoothScore = calcSmoothScore();
-  const brakeScore  = calcBrakeScore();
-  const cornerScore = calcCornerScore();
-
-  const s = document.getElementById('score-smooth');
-  const b = document.getElementById('score-brake');
-  const c = document.getElementById('score-corner');
-
-  s.textContent = smoothScore;
-  b.textContent = brakeScore;
-  c.textContent = cornerScore;
-
-  const color = v => v >= 80 ? 'var(--green)' : v >= 60 ? 'var(--yellow)' : 'var(--red)';
-  s.style.color = color(smoothScore);
-  b.style.color = color(brakeScore);
-  c.style.color = color(cornerScore);
-}
-
-function calcSmoothScore() {
-  // Score based on jerk rate — fewer jerks per sample = smoother
-  const jerkRate = jerks / samples.length;
-  return Math.max(0, Math.min(100, Math.round(100 - jerkRate * 300)));
-}
-
-function calcBrakeScore() {
-  // Penalize hard brakes per minute
-  const mins = (Date.now() - sessionStart) / 60000;
-  const rate = hardBrakes / Math.max(mins, 0.1);
-  return Math.max(0, Math.min(100, Math.round(100 - rate * 20)));
-}
-
-function calcCornerScore() {
-  const mins = (Date.now() - sessionStart) / 60000;
-  const rate = hardCorners / Math.max(mins, 0.1);
-  return Math.max(0, Math.min(100, Math.round(100 - rate * 20)));
-}
-
-function calcOverall() {
-  const s = parseInt(document.getElementById('score-smooth').textContent) || 100;
-  const b = parseInt(document.getElementById('score-brake').textContent)  || 100;
-  const c = parseInt(document.getElementById('score-corner').textContent) || 100;
-  return Math.round(s * 0.4 + b * 0.35 + c * 0.25);
+  if (samples.length < 5) return;
+  const { ss, bs, cs } = calcScores();
+  const el = id => document.getElementById(id);
+  el('sc-s').textContent=ss; el('sc-s').style.color=scoreColor(ss);
+  el('sc-b').textContent=bs; el('sc-b').style.color=scoreColor(bs);
+  el('sc-c').textContent=cs; el('sc-c').style.color=scoreColor(cs);
 }
 
 // ── SESSION CONTROL ──
-function toggleSession() {
-  recording ? stopSession() : startSession();
-}
+function toggleSession() { recording ? stopSession() : startSession(); }
 
 function startSession() {
-  recording = true;
-  sessionStart = Date.now();
-  sampleCount = 0;
-  samples = [];
-  events = [];
-  hardBrakes = 0;
-  hardCorners = 0;
-  peakG = 0;
-  jerks = 0;
-  lastG = 0;
-
-  document.getElementById('event-list').innerHTML = '<div class="no-events">Listening...</div>';
-  document.getElementById('score-smooth').textContent = '—';
-  document.getElementById('score-brake').textContent  = '—';
-  document.getElementById('score-corner').textContent = '—';
-  document.getElementById('score-smooth').style.color = '';
-  document.getElementById('score-brake').style.color  = '';
-  document.getElementById('score-corner').style.color = '';
-
-  const btn = document.getElementById('main-btn');
-  btn.textContent = 'Stop Session';
-  btn.classList.add('recording');
-
-  const dot = document.getElementById('status-dot');
-  dot.classList.add('active');
-  document.getElementById('status-text').textContent = 'Recording...';
-
-  timerInterval = setInterval(updateTimer, 1000);
+  recording=true; sessionStart=Date.now(); sampleCount=0;
+  samples=[]; eventLog=[]; hardBrakes=0; hardCorners=0;
+  peakG=0; jerks=0; lastG=0; lastEvTime={}; topSpeedMph=0;
+  document.getElementById('ev-list').innerHTML='<div class="no-ev">Listening...</div>';
+  ['sc-s','sc-b','sc-c'].forEach(id=>{document.getElementById(id).textContent='—';document.getElementById(id).style.color='';});
+  document.getElementById('main-btn').textContent='Stop Session';
+  document.getElementById('main-btn').classList.add('recording');
+  document.getElementById('status-dot').classList.add('active');
+  document.getElementById('status-text').textContent='Recording...';
+  timerInterval = setInterval(()=>{
+    const e = Math.floor((Date.now()-sessionStart)/1000);
+    document.getElementById('s-time').textContent=String(Math.floor(e/60)).padStart(2,'0')+':'+String(e%60).padStart(2,'0');
+  },1000);
 }
 
 function stopSession() {
-  recording = false;
-  clearInterval(timerInterval);
-
-  const btn = document.getElementById('main-btn');
-  btn.textContent = 'Start Session';
-  btn.classList.remove('recording');
-
-  const dot = document.getElementById('status-dot');
-  dot.classList.remove('active');
-  document.getElementById('status-text').textContent = 'Session complete';
-
+  recording=false; clearInterval(timerInterval);
+  document.getElementById('main-btn').textContent='Start Session';
+  document.getElementById('main-btn').classList.remove('recording');
+  document.getElementById('status-dot').classList.remove('active');
+  document.getElementById('status-text').textContent='Session complete';
   updateLiveScores();
-  showResults();
+  const session = buildSession();
+  saveSession(session);
+  showResults(session);
 }
 
-function updateTimer() {
-  const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
-  const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
-  const s = String(elapsed % 60).padStart(2, '0');
-  document.getElementById('session-time').textContent = `${m}:${s}`;
+function buildSession() {
+  const elapsed = Math.floor((Date.now()-sessionStart)/1000);
+  const { ss, bs, cs } = calcScores();
+  const overall = Math.round(ss*0.4 + bs*0.35 + cs*0.25);
+  const avgG = samples.length ? samples.reduce((a,b)=>a+b.total,0)/samples.length : 0;
+  return { id:sessionStart, date:new Date(sessionStart).toISOString(), duration:elapsed,
+    scores:{smooth:ss,brake:bs,corner:cs,overall}, hardBrakes:Math.round(hardBrakes),
+    hardCorners:Math.round(hardCorners), peakG, avgG, topSpeedMph, events:eventLog, samples };
+}
+
+// ── HISTORY ──
+function saveSession(session) {
+  try {
+    const h = getHistory();
+    h.unshift({...session, samples:undefined});
+    localStorage.setItem('dc-history', JSON.stringify(h.slice(0,50)));
+  } catch {}
+}
+function getHistory() { try { return JSON.parse(localStorage.getItem('dc-history')||'[]'); } catch { return []; } }
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  const history = getHistory();
+  if (!history.length) {
+    list.innerHTML='<div class="empty-history">No drives yet.<br>Head out and record your first session.</div>';
+    return;
+  }
+  list.innerHTML = history.map(s => {
+    const d = new Date(s.date);
+    const ds = d.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'})+' · '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const m=Math.floor(s.duration/60), sec=s.duration%60;
+    const col = s.scores.overall>=80?'var(--green)':s.scores.overall>=60?'var(--yellow)':'var(--red)';
+    return `<div class="history-item">
+      <div class="history-top">
+        <div><div class="history-date">${ds}</div></div>
+        <div class="history-score" style="color:${col}">${s.scores.overall}</div>
+      </div>
+      <div class="history-meta">
+        <span>${m}m ${sec}s</span>
+        <span>${s.hardBrakes} hard brakes</span>
+        <span>${s.hardCorners} hard corners</span>
+        ${s.topSpeedMph>0?`<span>${s.topSpeedMph.toFixed(0)} mph top</span>`:''}
+      </div>
+      <div class="history-pills">
+        <span class="pill" style="color:${scoreColor(s.scores.smooth)}">S ${s.scores.smooth}</span>
+        <span class="pill" style="color:${scoreColor(s.scores.brake)}">B ${s.scores.brake}</span>
+        <span class="pill" style="color:${scoreColor(s.scores.corner)}">C ${s.scores.corner}</span>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ── RESULTS ──
-function showResults() {
-  const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
-  const m = Math.floor(elapsed / 60);
-  const s = elapsed % 60;
-
-  const smooth = parseInt(document.getElementById('score-smooth').textContent) || 100;
-  const brake  = parseInt(document.getElementById('score-brake').textContent)  || 100;
-  const corner = parseInt(document.getElementById('score-corner').textContent) || 100;
-  const overall = calcOverall();
-
-  const grade = overall >= 90 ? 'Excellent driver' :
-                overall >= 75 ? 'Good driver' :
-                overall >= 60 ? 'Room to improve' : 'Needs work';
-
-  const color = overall >= 80 ? 'var(--green)' : overall >= 60 ? 'var(--yellow)' : 'var(--red)';
-
-  document.getElementById('res-overall').textContent = overall;
-  document.getElementById('res-overall').style.color = color;
-  document.getElementById('res-grade').textContent = grade;
-  document.getElementById('res-smooth').textContent = smooth;
-  document.getElementById('res-smooth').style.color = scoreColor(smooth);
-  document.getElementById('res-brake').textContent = brake;
-  document.getElementById('res-brake').style.color = scoreColor(brake);
-  document.getElementById('res-corner').textContent = corner;
-  document.getElementById('res-corner').style.color = scoreColor(corner);
-  document.getElementById('res-duration').textContent = `${m}m ${s}s`;
-  document.getElementById('res-brakes').textContent = hardBrakes;
-  document.getElementById('res-corners').textContent = hardCorners;
-  document.getElementById('res-peak').textContent = peakG.toFixed(2) + 'g';
-
-  const avgG = samples.length ? (samples.reduce((a,b)=>a+b,0)/samples.length).toFixed(3) : '—';
-  document.getElementById('res-avg').textContent = avgG + 'g';
-
-  const now = new Date();
-  document.getElementById('results-title').textContent = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-
+let lastSession = null;
+function showResults(session) {
+  lastSession = session;
+  const { scores, duration, hardBrakes:hb, hardCorners:hc, peakG:pk, avgG, topSpeedMph:ts } = session;
+  const col = scores.overall>=80?'var(--green)':scores.overall>=60?'var(--yellow)':'var(--red)';
+  const grade = scores.overall>=90?'Excellent driver':scores.overall>=75?'Good driver':scores.overall>=60?'Room to improve':'Needs work';
+  const el = id => document.getElementById(id);
+  el('res-overall').textContent=scores.overall; el('res-overall').style.color=col;
+  el('res-grade').textContent=grade;
+  el('res-s').textContent=scores.smooth; el('res-s').style.color=scoreColor(scores.smooth);
+  el('res-b').textContent=scores.brake;  el('res-b').style.color=scoreColor(scores.brake);
+  el('res-c').textContent=scores.corner; el('res-c').style.color=scoreColor(scores.corner);
+  el('res-dur').textContent=Math.floor(duration/60)+'m '+(duration%60)+'s';
+  el('res-brk').textContent=hb;
+  el('res-cor').textContent=hc;
+  el('res-peak').textContent=pk.toFixed(2)+'g';
+  el('res-avg').textContent=avgG.toFixed(3)+'g';
+  el('res-spd').textContent=ts>0?ts.toFixed(0)+' mph':'no GPS';
+  el('res-title').textContent=new Date(session.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   document.getElementById('results-overlay').classList.add('show');
+  renderHistory();
 }
-
-function scoreColor(v) {
-  return v >= 80 ? 'var(--green)' : v >= 60 ? 'var(--yellow)' : 'var(--red)';
-}
-
 function closeResults() {
   document.getElementById('results-overlay').classList.remove('show');
-  document.getElementById('status-text').textContent = 'Ready to record';
+  document.getElementById('status-text').textContent='Ready to record';
 }
-
 function newSession() {
   document.getElementById('results-overlay').classList.remove('show');
-  document.getElementById('session-time').textContent = '00:00';
-  document.getElementById('session-samples').textContent = '0 samples';
-  document.getElementById('status-text').textContent = 'Ready to record';
-  document.getElementById('event-list').innerHTML = '<div class="no-events">Events will appear during recording</div>';
+  document.getElementById('s-time').textContent='00:00';
+  document.getElementById('s-samples').textContent='0 samples';
+  document.getElementById('status-text').textContent='Ready to record';
+  document.getElementById('ev-list').innerHTML='<div class="no-ev">Events will appear during recording</div>';
+}
+
+// ── CSV EXPORT ──
+function exportCSV() {
+  if (!lastSession?.samples?.length) return;
+  const rows = [['time_ms','elapsed_s','lon_g','lat_g','vrt_g','total_g','speed_mph']];
+  lastSession.samples.forEach(s => rows.push([
+    s.t, ((s.t-lastSession.id)/1000).toFixed(2),
+    s.lon.toFixed(4), s.lat.toFixed(4), s.vrt.toFixed(4), s.total.toFixed(4), s.spd.toFixed(1)
+  ]));
+  const blob = new Blob([rows.map(r=>r.join(',')).join('\n')], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `drive_${new Date(lastSession.date).toISOString().slice(0,16).replace('T','_')}.csv`;
+  a.click();
+}
+
+// ── NAV ──
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.querySelectorAll(`nav button`).forEach(b => { if (b.textContent.toLowerCase().includes(name==='calibrate'?'setting':name)) b.classList.add('active'); });
+  if (name==='history') renderHistory();
 }
 </script>
 </body>
