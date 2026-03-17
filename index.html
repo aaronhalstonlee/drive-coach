@@ -706,7 +706,11 @@ function requestPermission() {
 // then subtract it so only dynamic acceleration (actual movement) remains.
 let gravX = 0, gravY = 0, gravZ = 0;
 let gravInitialized = false;
-const ALPHA = 0.85; // smoothing factor — higher = slower gravity adaptation
+const ALPHA = 0.85; // gravity filter — higher = slower adaptation
+
+// Display smoothing — separate lighter filter just for the readouts
+let dispLat = 0, dispLon = 0, dispVrt = 0, dispTot = 0;
+const DISP_ALPHA = 0.65; // lower = smoother but slightly more lag
 
 function updateGravity(x, y, z) {
   if (!gravInitialized) {
@@ -758,7 +762,13 @@ function handleMotion(e) {
   const vert = Math.abs(vertRaw);
   const total = Math.sqrt(lat*lat + lon*lon + vert*vert);
 
-  updateDisplay(lat, lon, vert, total);
+  // Smooth display values to reduce jitter
+  dispLat = DISP_ALPHA * dispLat + (1 - DISP_ALPHA) * lat;
+  dispLon = DISP_ALPHA * dispLon + (1 - DISP_ALPHA) * lon;
+  dispVrt = DISP_ALPHA * dispVrt + (1 - DISP_ALPHA) * vert;
+  dispTot = DISP_ALPHA * dispTot + (1 - DISP_ALPHA) * total;
+
+  updateDisplay(dispLat, dispLon, dispVrt, dispTot);
 
   // For brake detection, preserve sign — negative Y = deceleration
   const signedLon = lonRaw;
