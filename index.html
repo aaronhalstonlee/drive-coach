@@ -711,6 +711,9 @@ const ALPHA = 0.85; // gravity filter — higher = slower adaptation
 // Display smoothing — separate lighter filter just for the readouts
 let dispLat = 0, dispLon = 0, dispVrt = 0, dispTot = 0;
 const DISP_ALPHA = 0.65; // lower = smoother but slightly more lag
+const DEADBAND = 0.04;   // g — movements below this are treated as zero
+
+function deadband(v) { return v < DEADBAND ? 0 : v; }
 
 function updateGravity(x, y, z) {
   if (!gravInitialized) {
@@ -768,7 +771,7 @@ function handleMotion(e) {
   dispVrt = DISP_ALPHA * dispVrt + (1 - DISP_ALPHA) * vert;
   dispTot = DISP_ALPHA * dispTot + (1 - DISP_ALPHA) * total;
 
-  updateDisplay(dispLat, dispLon, dispVrt, dispTot);
+  updateDisplay(deadband(dispLat), deadband(dispLon), deadband(dispVrt), deadband(dispTot));
 
   // For brake detection, preserve sign — negative Y = deceleration
   const signedLon = lonRaw;
