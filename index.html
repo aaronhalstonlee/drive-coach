@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Driver Coach</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --border: #1e1e1e;
+      --text: #f0ede8;
+      --muted: #444;
+      --dim: #2a2a2a;
+      --green: #00e87a;
+      --yellow: #f5c842;
+      --red: #ff4444;
+      --accent: #00e87a;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      overflow: hidden;
+    }
+
+    #app {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 0;
+    }
+
+    /* ── HEADER ── */
+    header {
+      padding: 48px 32px 24px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .app-label {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text);
+    }
+
+    h1 span { color: var(--accent); }
+
+    /* ── MAIN CONTENT ── */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ── STATUS BAR ── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.3s;
+    }
+
+    .status-dot.active { background: var(--green); animation: pulse 1.5s infinite; }
+    .status-dot.warning { background: var(--yellow); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── G-FORCE DISPLAY ── */
+    .gforce-display {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      text-align: center;
+    }
+
+    .gforce-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .gforce-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 72px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: var(--text);
+      transition: color 0.2s;
+    }
+
+    .gforce-unit {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 6px;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── AXIS BARS ── */
+    .axes {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .axis-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 12px;
+      text-align: center;
+    }
+
+    .axis-label {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .axis-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .axis-bar-track {
+      height: 3px;
+      background: var(--dim);
+      border-radius: 2px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .axis-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: var(--accent);
+      transition: width 0.1s, background 0.2s;
+      transform-origin: center;
+    }
+
+    /* ── SCORE CARDS ── */
+    .scores {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .score-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 12px;
+      text-align: center;
+    }
+
+    .score-label {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .score-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      transition: color 0.3s;
+    }
+
+    .score-ring {
+      width: 36px;
+      height: 36px;
+      margin: 8px auto 0;
+    }
+
+    /* ── EVENTS ── */
+    .events-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .events-header {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .event-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: var(--dim);
+      animation: slideIn 0.2s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-8px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .event-type { color: var(--text); }
+    .event-val { color: var(--muted); font-size: 10px; }
+    .event-item.brake .event-type { color: var(--red); }
+    .event-item.corner .event-type { color: var(--yellow); }
+    .event-item.smooth .event-type { color: var(--green); }
+
+    .no-events {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      padding: 12px 0;
+    }
+
+    /* ── FOOTER / CONTROLS ── */
+    footer {
+      padding: 24px 32px 40px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .session-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      letter-spacing: 0.08em;
+    }
+
+    #main-btn {
+      width: 100%;
+      padding: 18px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--accent);
+      color: #000;
+    }
+
+    #main-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    #main-btn:active { transform: translateY(0); opacity: 1; }
+    #main-btn.recording { background: var(--dim); color: var(--red); border: 1px solid var(--red); }
+
+    /* ── RESULTS OVERLAY ── */
+    #results-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 100;
+      flex-direction: column;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    #results-overlay.show { display: flex; }
+
+    .results-header {
+      padding: 48px 32px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .results-label {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .results-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .results-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .overall-score {
+      text-align: center;
+      padding: 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .overall-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .overall-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 96px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .overall-grade {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 8px;
+      letter-spacing: 0.1em;
+    }
+
+    .result-breakdown {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 12px;
+      text-align: center;
+    }
+
+    .result-card-label {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .result-card-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+    }
+
+    .result-card-sub {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .results-stats {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+
+    .stat-label { color: var(--muted); }
+    .stat-val { color: var(--text); }
+
+    .results-footer {
+      padding: 24px 32px 40px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      flex: 2;
+      padding: 16px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #000;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover, .btn-primary:hover { opacity: 0.85; }
+
+    /* ── PERMISSION SCREEN ── */
+    #permission-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 32px;
+      text-align: center;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    #permission-screen.show { display: flex; }
+
+    .permission-icon {
+      font-size: 48px;
+      margin-bottom: 24px;
+    }
+
+    .permission-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .permission-text {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    .permission-btn {
+      width: 100%;
+      padding: 18px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #000;
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .permission-note {
+      font-size: 10px;
+      color: var(--dim);
+      margin-top: 16px;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Permission Screen (iOS) -->
+<div id="permission-screen">
+  <div class="permission-icon">📱</div>
+  <div class="permission-title">Motion Access Needed</div>
+  <div class="permission-text">Driver Coach needs access to your device's motion sensors to measure acceleration, braking, and cornering forces.</div>
+  <button class="permission-btn" onclick="requestPermission()">Allow Motion Access</button>
+  <div class="permission-note">Your data never leaves this device.</div>
+</div>
+
+<!-- Results Overlay -->
+<div id="results-overlay">
+  <div class="results-header">
+    <div class="results-label">Session Complete</div>
+    <div class="results-title" id="results-title">Your Drive</div>
+  </div>
+  <div class="results-body">
+    <div class="overall-score">
+      <div class="overall-label">Overall Score</div>
+      <div class="overall-value" id="res-overall">—</div>
+      <div class="overall-grade" id="res-grade"></div>
+    </div>
+    <div class="result-breakdown">
+      <div class="result-card">
+        <div class="result-card-label">Smooth</div>
+        <div class="result-card-value" id="res-smooth">—</div>
+        <div class="result-card-sub">smoothness</div>
+      </div>
+      <div class="result-card">
+        <div class="result-card-label">Brake</div>
+        <div class="result-card-value" id="res-brake">—</div>
+        <div class="result-card-sub">braking</div>
+      </div>
+      <div class="result-card">
+        <div class="result-card-label">Corner</div>
+        <div class="result-card-value" id="res-corner">—</div>
+        <div class="result-card-sub">cornering</div>
+      </div>
+    </div>
+    <div class="results-stats">
+      <div class="stat-row"><span class="stat-label">Duration</span><span class="stat-val" id="res-duration">—</span></div>
+      <div class="stat-row"><span class="stat-label">Hard brakes</span><span class="stat-val" id="res-brakes">—</span></div>
+      <div class="stat-row"><span class="stat-label">Hard corners</span><span class="stat-val" id="res-corners">—</span></div>
+      <div class="stat-row"><span class="stat-label">Peak g-force</span><span class="stat-val" id="res-peak">—</span></div>
+      <div class="stat-row"><span class="stat-label">Avg smoothness</span><span class="stat-val" id="res-avg">—</span></div>
+    </div>
+  </div>
+  <div class="results-footer">
+    <button class="btn-secondary" onclick="closeResults()">Close</button>
+    <button class="btn-primary" onclick="newSession()">New Session</button>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app">
+  <header>
+    <div class="app-label">Driver Coach</div>
+    <h1>Your Drive,<br><span>Scored.</span></h1>
+  </header>
+
+  <main>
+    <!-- Status -->
+    <div class="status-bar">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">Ready to record</span>
+      <span id="grav-method" style="margin-left:auto;font-size:9px;color:var(--muted);letter-spacing:0.1em"></span>
+    </div>
+
+    <!-- Live G-Force -->
+    <div class="gforce-display">
+      <div class="gforce-label">Total G-Force</div>
+      <div class="gforce-value" id="gforce-val">0.00</div>
+      <div class="gforce-unit">g</div>
+    </div>
+
+    <!-- Axes -->
+    <div class="axes">
+      <div class="axis-card">
+        <div class="axis-label">Long</div>
+        <div class="axis-value" id="ax-long">0.00</div>
+        <div class="axis-bar-track"><div class="axis-bar-fill" id="bar-long" style="width:0%"></div></div>
+      </div>
+      <div class="axis-card">
+        <div class="axis-label">Lat</div>
+        <div class="axis-value" id="ax-lat">0.00</div>
+        <div class="axis-bar-track"><div class="axis-bar-fill" id="bar-lat" style="width:0%"></div></div>
+      </div>
+      <div class="axis-card">
+        <div class="axis-label">Vert</div>
+        <div class="axis-value" id="ax-vert">0.00</div>
+        <div class="axis-bar-track"><div class="axis-bar-fill" id="bar-vert" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- Live Scores -->
+    <div class="scores">
+      <div class="score-card">
+        <div class="score-label">Smooth</div>
+        <div class="score-value" id="score-smooth">—</div>
+      </div>
+      <div class="score-card">
+        <div class="score-label">Brake</div>
+        <div class="score-value" id="score-brake">—</div>
+      </div>
+      <div class="score-card">
+        <div class="score-label">Corner</div>
+        <div class="score-value" id="score-corner">—</div>
+      </div>
+    </div>
+
+    <!-- Events -->
+    <div class="events-panel">
+      <div class="events-header">Events</div>
+      <div class="event-list" id="event-list">
+        <div class="no-events">Events will appear during recording</div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="session-info">
+      <span id="session-time">00:00</span>
+      <span id="session-samples">0 samples</span>
+    </div>
+    <button id="main-btn" onclick="toggleSession()">Start Session</button>
+  </footer>
+</div>
+
+<script>
+// ── STATE ──
+let recording = false;
+let sessionStart = null;
+let timerInterval = null;
+let sampleCount = 0;
+
+// Thresholds (in g)
+const HARD_BRAKE_G = 0.4;
+const HARD_CORNER_G = 0.35;
+const JERK_THRESHOLD = 0.15;
+
+// Session data
+let samples = [];
+let events = [];
+let hardBrakes = 0;
+let hardCorners = 0;
+let peakG = 0;
+let jerks = 0;
+let lastG = 0;
+
+// ── PERMISSION (iOS 13+) ──
+function needsPermission() {
+  return typeof DeviceMotionEvent !== 'undefined' &&
+    typeof DeviceMotionEvent.requestPermission === 'function';
+}
+
+window.addEventListener('load', () => {
+  if (needsPermission()) {
+    document.getElementById('permission-screen').classList.add('show');
+  }
+});
+
+function requestPermission() {
+  DeviceMotionEvent.requestPermission().then(state => {
+    if (state === 'granted') {
+      document.getElementById('permission-screen').classList.remove('show');
+      startMotion();
+    }
+  }).catch(console.error);
+}
+
+// ── GRAVITY COMPENSATION ──
+// We use a low-pass filter to estimate the gravity component on each axis,
+// then subtract it so only dynamic acceleration (actual movement) remains.
+let gravX = 0, gravY = 0, gravZ = 0;
+let gravInitialized = false;
+const ALPHA = 0.85; // smoothing factor — higher = slower gravity adaptation
+
+function updateGravity(x, y, z) {
+  if (!gravInitialized) {
+    gravX = x; gravY = y; gravZ = z;
+    gravInitialized = true;
+    return;
+  }
+  gravX = ALPHA * gravX + (1 - ALPHA) * x;
+  gravY = ALPHA * gravY + (1 - ALPHA) * y;
+  gravZ = ALPHA * gravZ + (1 - ALPHA) * z;
+}
+
+// ── MOTION ──
+function startMotion() {
+  window.addEventListener('devicemotion', handleMotion);
+}
+
+if (!needsPermission()) {
+  window.addEventListener('load', () => startMotion());
+}
+
+function handleMotion(e) {
+  // Prefer e.acceleration (gravity already removed by OS) if available and non-null
+  const hasCleanAcc = e.acceleration &&
+    (e.acceleration.x !== null || e.acceleration.y !== null || e.acceleration.z !== null);
+
+  let latRaw, lonRaw, vertRaw;
+
+  if (hasCleanAcc) {
+    document.getElementById('grav-method').textContent = 'OS GRAV';
+    // OS-provided gravity removal — most reliable
+    latRaw  = (e.acceleration.x || 0) / 9.81;
+    lonRaw  = (e.acceleration.y || 0) / 9.81;
+    vertRaw = (e.acceleration.z || 0) / 9.81;
+  } else {
+    document.getElementById('grav-method').textContent = 'LP FILTER';
+    // Fall back: manual gravity removal via low-pass filter
+    const acc = e.accelerationIncludingGravity;
+    if (!acc) return;
+    updateGravity(acc.x || 0, acc.y || 0, acc.z || 0);
+    latRaw  = ((acc.x || 0) - gravX) / 9.81;
+    lonRaw  = ((acc.y || 0) - gravY) / 9.81;
+    vertRaw = ((acc.z || 0) - gravZ) / 9.81;
+  }
+
+  // Convert m/s² to g — absolute values for display
+  const lat  = Math.abs(latRaw);
+  const lon  = Math.abs(lonRaw);
+  const vert = Math.abs(vertRaw);
+  const total = Math.sqrt(lat*lat + lon*lon + vert*vert);
+
+  updateDisplay(lat, lon, vert, total);
+
+  // For brake detection, preserve sign — negative Y = deceleration
+  const signedLon = lonRaw;
+
+  if (!recording) return;
+
+  sampleCount++;
+  samples.push(total);
+
+  // Peak
+  if (total > peakG) peakG = total;
+
+  // Jerk detection
+  const jerk = Math.abs(total - lastG);
+  if (jerk > JERK_THRESHOLD) jerks++;
+  lastG = total;
+
+  // Hard brake: large longitudinal decel (negative = braking)
+  if (signedLon < -HARD_BRAKE_G) {
+    hardBrakes++;
+    addEvent('brake', `Hard brake ${signedLon.toFixed(2)}g`);
+  }
+
+  // Hard corner: large lateral
+  if (lat > HARD_CORNER_G) {
+    hardCorners++;
+    addEvent('corner', `Hard corner ${lat.toFixed(2)}g`);
+  }
+
+  // Update live scores every 20 samples
+  if (sampleCount % 20 === 0) updateLiveScores();
+
+  document.getElementById('session-samples').textContent = sampleCount + ' samples';
+}
+
+function updateDisplay(lat, lon, vert, total) {
+  const gv = document.getElementById('gforce-val');
+  gv.textContent = total.toFixed(2);
+  gv.style.color = total > 0.6 ? 'var(--red)' : total > 0.35 ? 'var(--yellow)' : 'var(--text)';
+
+  document.getElementById('ax-lat').textContent  = lat.toFixed(2);
+  document.getElementById('ax-long').textContent = lon.toFixed(2);
+  document.getElementById('ax-vert').textContent = vert.toFixed(2);
+
+  const pct = (v) => Math.min(100, v / 0.8 * 100).toFixed(1) + '%';
+  const barColor = (v) => v > 0.5 ? 'var(--red)' : v > 0.3 ? 'var(--yellow)' : 'var(--accent)';
+
+  const bl = document.getElementById('bar-lat');
+  const bln = document.getElementById('bar-long');
+  const bv = document.getElementById('bar-vert');
+  bl.style.width  = pct(lat);   bl.style.background  = barColor(lat);
+  bln.style.width = pct(lon);   bln.style.background = barColor(lon);
+  bv.style.width  = pct(vert);  bv.style.background  = barColor(vert);
+}
+
+function addEvent(type, text) {
+  const list = document.getElementById('event-list');
+  const empties = list.querySelectorAll('.no-events');
+  empties.forEach(e => e.remove());
+
+  // Debounce — don't spam same event type
+  const last = events[events.length - 1];
+  if (last && last.type === type && Date.now() - last.time < 2000) return;
+
+  events.push({ type, text, time: Date.now() });
+
+  const item = document.createElement('div');
+  item.className = `event-item ${type}`;
+  item.innerHTML = `<span class="event-type">${text}</span><span class="event-val">${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span>`;
+  list.insertBefore(item, list.firstChild);
+
+  // Keep max 10 events visible
+  while (list.children.length > 10) list.removeChild(list.lastChild);
+}
+
+function updateLiveScores() {
+  if (samples.length < 10) return;
+
+  const smoothScore = calcSmoothScore();
+  const brakeScore  = calcBrakeScore();
+  const cornerScore = calcCornerScore();
+
+  const s = document.getElementById('score-smooth');
+  const b = document.getElementById('score-brake');
+  const c = document.getElementById('score-corner');
+
+  s.textContent = smoothScore;
+  b.textContent = brakeScore;
+  c.textContent = cornerScore;
+
+  const color = v => v >= 80 ? 'var(--green)' : v >= 60 ? 'var(--yellow)' : 'var(--red)';
+  s.style.color = color(smoothScore);
+  b.style.color = color(brakeScore);
+  c.style.color = color(cornerScore);
+}
+
+function calcSmoothScore() {
+  // Score based on jerk rate — fewer jerks per sample = smoother
+  const jerkRate = jerks / samples.length;
+  return Math.max(0, Math.min(100, Math.round(100 - jerkRate * 300)));
+}
+
+function calcBrakeScore() {
+  // Penalize hard brakes per minute
+  const mins = (Date.now() - sessionStart) / 60000;
+  const rate = hardBrakes / Math.max(mins, 0.1);
+  return Math.max(0, Math.min(100, Math.round(100 - rate * 20)));
+}
+
+function calcCornerScore() {
+  const mins = (Date.now() - sessionStart) / 60000;
+  const rate = hardCorners / Math.max(mins, 0.1);
+  return Math.max(0, Math.min(100, Math.round(100 - rate * 20)));
+}
+
+function calcOverall() {
+  const s = parseInt(document.getElementById('score-smooth').textContent) || 100;
+  const b = parseInt(document.getElementById('score-brake').textContent)  || 100;
+  const c = parseInt(document.getElementById('score-corner').textContent) || 100;
+  return Math.round(s * 0.4 + b * 0.35 + c * 0.25);
+}
+
+// ── SESSION CONTROL ──
+function toggleSession() {
+  recording ? stopSession() : startSession();
+}
+
+function startSession() {
+  recording = true;
+  sessionStart = Date.now();
+  sampleCount = 0;
+  samples = [];
+  events = [];
+  hardBrakes = 0;
+  hardCorners = 0;
+  peakG = 0;
+  jerks = 0;
+  lastG = 0;
+
+  document.getElementById('event-list').innerHTML = '<div class="no-events">Listening...</div>';
+  document.getElementById('score-smooth').textContent = '—';
+  document.getElementById('score-brake').textContent  = '—';
+  document.getElementById('score-corner').textContent = '—';
+  document.getElementById('score-smooth').style.color = '';
+  document.getElementById('score-brake').style.color  = '';
+  document.getElementById('score-corner').style.color = '';
+
+  const btn = document.getElementById('main-btn');
+  btn.textContent = 'Stop Session';
+  btn.classList.add('recording');
+
+  const dot = document.getElementById('status-dot');
+  dot.classList.add('active');
+  document.getElementById('status-text').textContent = 'Recording...';
+
+  timerInterval = setInterval(updateTimer, 1000);
+}
+
+function stopSession() {
+  recording = false;
+  clearInterval(timerInterval);
+
+  const btn = document.getElementById('main-btn');
+  btn.textContent = 'Start Session';
+  btn.classList.remove('recording');
+
+  const dot = document.getElementById('status-dot');
+  dot.classList.remove('active');
+  document.getElementById('status-text').textContent = 'Session complete';
+
+  updateLiveScores();
+  showResults();
+}
+
+function updateTimer() {
+  const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+  const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const s = String(elapsed % 60).padStart(2, '0');
+  document.getElementById('session-time').textContent = `${m}:${s}`;
+}
+
+// ── RESULTS ──
+function showResults() {
+  const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+
+  const smooth = parseInt(document.getElementById('score-smooth').textContent) || 100;
+  const brake  = parseInt(document.getElementById('score-brake').textContent)  || 100;
+  const corner = parseInt(document.getElementById('score-corner').textContent) || 100;
+  const overall = calcOverall();
+
+  const grade = overall >= 90 ? 'Excellent driver' :
+                overall >= 75 ? 'Good driver' :
+                overall >= 60 ? 'Room to improve' : 'Needs work';
+
+  const color = overall >= 80 ? 'var(--green)' : overall >= 60 ? 'var(--yellow)' : 'var(--red)';
+
+  document.getElementById('res-overall').textContent = overall;
+  document.getElementById('res-overall').style.color = color;
+  document.getElementById('res-grade').textContent = grade;
+  document.getElementById('res-smooth').textContent = smooth;
+  document.getElementById('res-smooth').style.color = scoreColor(smooth);
+  document.getElementById('res-brake').textContent = brake;
+  document.getElementById('res-brake').style.color = scoreColor(brake);
+  document.getElementById('res-corner').textContent = corner;
+  document.getElementById('res-corner').style.color = scoreColor(corner);
+  document.getElementById('res-duration').textContent = `${m}m ${s}s`;
+  document.getElementById('res-brakes').textContent = hardBrakes;
+  document.getElementById('res-corners').textContent = hardCorners;
+  document.getElementById('res-peak').textContent = peakG.toFixed(2) + 'g';
+
+  const avgG = samples.length ? (samples.reduce((a,b)=>a+b,0)/samples.length).toFixed(3) : '—';
+  document.getElementById('res-avg').textContent = avgG + 'g';
+
+  const now = new Date();
+  document.getElementById('results-title').textContent = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+
+  document.getElementById('results-overlay').classList.add('show');
+}
+
+function scoreColor(v) {
+  return v >= 80 ? 'var(--green)' : v >= 60 ? 'var(--yellow)' : 'var(--red)';
+}
+
+function closeResults() {
+  document.getElementById('results-overlay').classList.remove('show');
+  document.getElementById('status-text').textContent = 'Ready to record';
+}
+
+function newSession() {
+  document.getElementById('results-overlay').classList.remove('show');
+  document.getElementById('session-time').textContent = '00:00';
+  document.getElementById('session-samples').textContent = '0 samples';
+  document.getElementById('status-text').textContent = 'Ready to record';
+  document.getElementById('event-list').innerHTML = '<div class="no-events">Events will appear during recording</div>';
+}
+</script>
+</body>
+</html>
