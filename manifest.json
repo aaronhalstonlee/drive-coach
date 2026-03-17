@@ -1,6 +1,6 @@
 {
-  "name": "Driver Coach",
-  "short_name": "Driver Coach",
+  "name": "Drive Coach",
+  "short_name": "Drive Coach",
   "description": "Score your driving smoothness, braking, and cornering in real time.",
   "start_url": "/drive-coach/",
   "display": "standalone",
