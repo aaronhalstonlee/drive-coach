@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Driver Coach</title>
+  <title>Drive Coach</title>
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
@@ -127,7 +127,7 @@
 <div id="permission-screen">
   <div style="font-size:48px;margin-bottom:24px">📱</div>
   <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:12px">Motion Access Needed</div>
-  <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:32px">Driver Coach needs access to your device motion sensors to measure acceleration, braking, and cornering.</div>
+  <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:32px">Drive Coach needs access to your device motion sensors to measure acceleration, braking, and cornering.</div>
   <button class="perm-btn" onclick="requestPermission()">Allow Motion Access</button>
   <div style="font-size:10px;color:var(--dim);margin-top:14px">Your data never leaves this device.</div>
 </div>
@@ -166,7 +166,7 @@
 <!-- DRIVE SCREEN -->
 <div class="screen active" id="screen-drive">
   <div class="screen-header">
-    <div class="screen-label">Driver Coach</div>
+    <div class="screen-label">Drive Coach</div>
     <div class="screen-title">Your Drive, <span>Scored.</span></div>
   </div>
   <div class="scroll-body">
@@ -212,7 +212,7 @@
 <!-- HISTORY SCREEN -->
 <div class="screen" id="screen-history">
   <div class="screen-header">
-    <div class="screen-label">Driver Coach</div>
+    <div class="screen-label">Drive Coach</div>
     <div class="screen-title">Past <span>Drives</span></div>
   </div>
   <div class="scroll-body" id="history-list"></div>
@@ -230,7 +230,7 @@
 <!-- CALIBRATE SCREEN -->
 <div class="screen" id="screen-calibrate">
   <div class="screen-header">
-    <div class="screen-label">Driver Coach</div>
+    <div class="screen-label">Drive Coach</div>
     <div class="screen-title">Settings</div>
   </div>
   <div class="scroll-body">
@@ -592,7 +592,7 @@ function exportSelectedCSV() {
   const blob = new Blob([rows.map(r=>r.join(',')).join('\n')], {type:'text/csv'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `driver_coach_${selected.length}_sessions_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `drive_coach_${selected.length}_sessions_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 }
 
