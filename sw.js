@@ -1,4 +1,4 @@
-const CACHE = 'driver-coach-v1';
+const CACHE = 'driver-coach-v2';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
