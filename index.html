@@ -16,7 +16,7 @@
       --text: #f0ede8; --muted: #555; --dim: #2a2a2a;
       --green: #00e87a; --yellow: #f5c842; --red: #ff4444; --accent: #00e87a;
     }
-    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; overflow: hidden; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; overflow: hidden; line-height: 1.6; font-size: 13px; }
 
     .screen { display: none; height: 100%; flex-direction: column; max-width: 480px; margin: 0 auto; }
     .screen.active { display: flex; }
@@ -78,38 +78,45 @@
     .res-mini { background: var(--dim); border-radius: 6px; padding: 12px 8px; text-align: center; }
     .res-mini-lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
     .res-mini-val { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; }
-    .stat-row { display: flex; justify-content: space-between; font-size: 12px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .stat-row { display: flex; justify-content: space-between; font-size: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
     .stat-row:last-child { border-bottom: none; }
     .stat-lbl { color: var(--muted); }
+    .event-item { display: flex; justify-content: space-between; font-size: 12px; padding: 8px 9px; border-radius: 4px; background: var(--dim); margin-bottom: 5px; animation: slideIn 0.2s ease; }
+    @keyframes slideIn { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:translateX(0)} }
+    .event-item.brake .et { color: var(--red); }
+    .event-item.corner .et { color: var(--yellow); }
+    .no-ev { font-size: 12px; color: var(--muted); text-align: center; padding: 10px 0; }
+
     .results-footer { padding: 14px 28px 28px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; }
-    .btn-sec  { flex: 1; padding: 13px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--text); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; }
-    .btn-pri  { flex: 2; padding: 13px; border: none; border-radius: 8px; background: var(--accent); color: #000; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 800; cursor: pointer; }
-    .btn-ghost { flex: 1; padding: 13px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--muted); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-sec  { flex: 1; padding: 14px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--text); font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-pri  { flex: 2; padding: 14px; border: none; border-radius: 8px; background: var(--accent); color: #000; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; }
+    .btn-ghost { flex: 1; padding: 14px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--muted); font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
 
     /* History */
-    .history-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 0; transition: border-color 0.2s; }
+    .history-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 0; transition: border-color 0.2s; }
     .history-item:hover { border-color: var(--muted); }
     .history-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-    .history-date { font-size: 11px; color: var(--muted); }
+    .history-date { font-size: 12px; color: var(--muted); line-height: 1.6; }
     .history-score { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; }
-    .history-meta { display: flex; gap: 10px; font-size: 10px; color: var(--muted); flex-wrap: wrap; }
+    .history-meta { display: flex; gap: 10px; font-size: 11px; color: var(--muted); flex-wrap: wrap; line-height: 1.8; }
     .history-pills { display: flex; gap: 6px; margin-top: 10px; }
-    .pill { background: var(--dim); border-radius: 3px; padding: 3px 8px; font-size: 10px; }
-    .empty-history { text-align: center; padding: 48px 0; color: var(--muted); font-size: 12px; line-height: 1.8; }
+    .pill { background: var(--dim); border-radius: 3px; padding: 4px 9px; font-size: 11px; }
+    .empty-history { text-align: center; padding: 48px 0; color: var(--muted); font-size: 13px; line-height: 2; }
+    .history-checkbox { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; margin-top: 6px; }
+    .history-footer { padding: 14px 28px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; }
+    .danger-btn { width: 100%; padding: 12px; border: 1px solid var(--red); border-radius: 8px; background: transparent; color: var(--red); font-family: 'DM Mono', monospace; font-size: 11px; cursor: pointer; letter-spacing: 0.1em; }
 
     /* Calibration */
     .cal-row { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
     .cal-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
-    .cal-lbl { font-size: 11px; color: var(--text); }
+    .cal-lbl { font-size: 12px; color: var(--text); }
     .cal-val { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: var(--accent); }
-    .cal-desc { font-size: 10px; color: var(--muted); margin-bottom: 10px; line-height: 1.6; }
+    .cal-desc { font-size: 11px; color: var(--muted); margin-bottom: 10px; line-height: 1.7; }
     input[type=range] { width: 100%; accent-color: var(--accent); }
     .orient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .orient-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 8px; text-align: center; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.08em; transition: all 0.2s; }
+    .orient-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 8px; text-align: center; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.08em; line-height: 1.8; transition: all 0.2s; }
     .orient-btn.selected { border-color: var(--accent); color: var(--accent); }
-    .reset-btn { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; cursor: pointer; letter-spacing: 0.1em; }
-
-    /* Permission */
+    .reset-btn { width: 100%; padding: 13px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 12px; cursor: pointer; letter-spacing: 0.1em; }
     #permission-screen { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 200; flex-direction: column; align-items: center; justify-content: center; padding: 48px 32px; text-align: center; max-width: 480px; margin: 0 auto; }
     #permission-screen.show { display: flex; }
     .perm-btn { width: 100%; padding: 16px; border: none; border-radius: 8px; background: var(--accent); color: #000; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; cursor: pointer; }
@@ -151,7 +158,6 @@
     </div>
   </div>
   <div class="results-footer">
-    <button class="btn-ghost" onclick="exportCSV()">CSV</button>
     <button class="btn-sec" onclick="closeResults()">Close</button>
     <button class="btn-pri" onclick="newSession()">New Drive</button>
   </div>
@@ -210,6 +216,10 @@
     <div class="screen-title">Past <span>Drives</span></div>
   </div>
   <div class="scroll-body" id="history-list"></div>
+  <div class="history-footer">
+    <button class="btn-ghost" onclick="exportSelectedCSV()" id="export-btn">Export CSV</button>
+    <button class="btn-sec" onclick="confirmClearHistory()">Clear History</button>
+  </div>
   <nav>
     <button onclick="showScreen('drive')">Drive</button>
     <button class="active" onclick="showScreen('history')">History</button>
@@ -525,31 +535,72 @@ function renderHistory() {
   const history = getHistory();
   if (!history.length) {
     list.innerHTML='<div class="empty-history">No drives yet.<br>Head out and record your first session.</div>';
+    document.getElementById('export-btn').style.opacity='0.3';
     return;
   }
-  list.innerHTML = history.map(s => {
+  document.getElementById('export-btn').style.opacity='1';
+  list.innerHTML = history.map((s, idx) => {
     const d = new Date(s.date);
     const ds = d.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'})+' · '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     const m=Math.floor(s.duration/60), sec=s.duration%60;
     const col = s.scores.overall>=80?'var(--green)':s.scores.overall>=60?'var(--yellow)':'var(--red)';
     return `<div class="history-item">
-      <div class="history-top">
-        <div><div class="history-date">${ds}</div></div>
-        <div class="history-score" style="color:${col}">${s.scores.overall}</div>
-      </div>
-      <div class="history-meta">
-        <span>${m}m ${sec}s</span>
-        <span>${s.hardBrakes} hard brakes</span>
-        <span>${s.hardCorners} hard corners</span>
-        ${s.topSpeedMph>0?`<span>${s.topSpeedMph.toFixed(0)} mph top</span>`:''}
-      </div>
-      <div class="history-pills">
-        <span class="pill" style="color:${scoreColor(s.scores.smooth)}">S ${s.scores.smooth}</span>
-        <span class="pill" style="color:${scoreColor(s.scores.brake)}">B ${s.scores.brake}</span>
-        <span class="pill" style="color:${scoreColor(s.scores.corner)}">C ${s.scores.corner}</span>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <input type="checkbox" class="history-checkbox" data-idx="${idx}" checked>
+        <div style="flex:1">
+          <div class="history-top">
+            <div><div class="history-date">${ds}</div></div>
+            <div class="history-score" style="color:${col}">${s.scores.overall}</div>
+          </div>
+          <div class="history-meta">
+            <span>${m}m ${sec}s</span>
+            <span>${s.hardBrakes} hard brakes</span>
+            <span>${s.hardCorners} hard corners</span>
+            ${s.topSpeedMph>0?`<span>${s.topSpeedMph.toFixed(0)} mph top</span>`:''}
+          </div>
+          <div class="history-pills">
+            <span class="pill" style="color:${scoreColor(s.scores.smooth)}">S ${s.scores.smooth}</span>
+            <span class="pill" style="color:${scoreColor(s.scores.brake)}">B ${s.scores.brake}</span>
+            <span class="pill" style="color:${scoreColor(s.scores.corner)}">C ${s.scores.corner}</span>
+          </div>
+        </div>
       </div>
     </div>`;
   }).join('');
+}
+
+function exportSelectedCSV() {
+  const history = getHistory();
+  if (!history.length) return;
+  const checkboxes = document.querySelectorAll('.history-checkbox');
+  const selected = [];
+  checkboxes.forEach((cb, i) => { if (cb.checked) selected.push(history[i]); });
+  if (!selected.length) { alert('No sessions selected.'); return; }
+
+  const rows = [['session_date','duration_s','score_overall','score_smooth','score_brake','score_corner','hard_brakes','hard_corners','peak_g','avg_g','top_speed_mph']];
+  selected.forEach(s => {
+    rows.push([
+      new Date(s.date).toISOString(),
+      s.duration,
+      s.scores.overall, s.scores.smooth, s.scores.brake, s.scores.corner,
+      s.hardBrakes, s.hardCorners,
+      s.peakG.toFixed(4), s.avgG.toFixed(4),
+      s.topSpeedMph > 0 ? s.topSpeedMph.toFixed(1) : ''
+    ]);
+  });
+
+  const blob = new Blob([rows.map(r=>r.join(',')).join('\n')], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `driver_coach_${selected.length}_sessions_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function confirmClearHistory() {
+  if (confirm('Clear all drive history? This cannot be undone.')) {
+    localStorage.removeItem('dc-history');
+    renderHistory();
+  }
 }
 
 // ── RESULTS ──
